@@ -29,10 +29,13 @@ public class ChangesMain
         for (String className : intersection) {
             List<String> differences =
                 oldClasses.classes.get(className).findDifferences(newClasses.classes.get(className));
-            for (String difference : differences) {
-                System.out.println(className + " " + difference);
+            if (differences.isEmpty()) {
+                continue;
             }
-
+            System.out.println(className + ":");
+            for (String difference : differences) {
+                System.out.println("  " + difference);
+            }
         }
     }
 }
