@@ -1,4 +1,4 @@
-<project name="testlib">
+<project name="testapp">
   <property name="src.dir" location="src/main/java"/>
   <property name="deploy.dir" location="dist"/>
   <property name="classes.dir" location="${deploy.dir}/classes"/>
@@ -28,6 +28,14 @@
 
   <target name="dist" depends="compile" description="Compiles code, builds jar file.">
     <jar destfile="${jar.file}" basedir="${classes.dir}"/>
+  </target>
+
+  <target name="run" depends="compile">
+    <path id="build.classpath">
+      <path refid="pom.xml.path"/>
+      <pathelement location="${classes.dir}"/>
+    </path>
+    <java classname="com.bungleton.changestest.app.AppMain" classpathref="build.classpath"/>
   </target>
 
   <target name="maven-deploy" depends="dist" description="Deploys artifacts to a Maven repository.">

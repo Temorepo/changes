@@ -5,7 +5,7 @@
   <property name="jar.file" location="${deploy.dir}/${ant.project.name}.jar"/>
 
   <!-- bring in our standard build support -->
-  <property name="ooo-build.vers" value="1.24"/>
+  <property name="ooo-build.vers" value="1.25"/>
   <ant antfile="../../bootstrap.xml"/>
   <import file="${user.home}/.m2/ant-support/${ooo-build.vers}/build-support.xml"/>
 

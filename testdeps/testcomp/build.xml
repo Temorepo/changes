@@ -1,4 +1,4 @@
-<project name="testlib">
+<project name="testcomp">
   <property name="src.dir" location="src/main/java"/>
   <property name="deploy.dir" location="dist"/>
   <property name="classes.dir" location="${deploy.dir}/classes"/>
