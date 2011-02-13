@@ -21,6 +21,7 @@ import org.sonatype.aether.graph.Dependency;
 import org.sonatype.aether.repository.LocalRepository;
 import org.sonatype.aether.repository.RemoteRepository;
 
+import org.sonatype.aether.resolution.ArtifactRequest;
 import org.sonatype.aether.resolution.ArtifactResult;
 
 import org.sonatype.aether.util.artifact.DefaultArtifact;
@@ -46,18 +47,28 @@ public class DependencyResolver {
         _repo = new RemoteRepository("central", "default", "http://repo1.maven.org/maven2/");
     }
 
-    public Iterable<Artifact> resolve (String artifactCoordinates)
+    public Iterable<Artifact> resolveDependencies (String artifactCoordinates)
         throws RepositoryException
     {
-        Dependency root = new Dependency(new DefaultArtifact(artifactCoordinates), "compile");
-
-        CollectRequest req = new CollectRequest().setRoot(root).addRepository(_repo);
+        CollectRequest req = new CollectRequest().
+        	setRoot(new Dependency(new DefaultArtifact(artifactCoordinates), "compile")).
+        	addRepository(_repo);
         List<ArtifactResult> results = _system.resolveDependencies(_session, req, null);
         List<Artifact> artifacts = Lists.newArrayListWithCapacity(results.size());
         for (ArtifactResult result : results) {
             artifacts.add(result.getArtifact());
         }
         return artifacts;
+   }
+
+    public Artifact resolveArtifact (String artifactCoordinates)
+        throws RepositoryException
+    {
+        ArtifactRequest req = new ArtifactRequest().
+            setArtifact(new DefaultArtifact(artifactCoordinates)).
+            addRepository(_repo);
+        ArtifactResult result = _system.resolveArtifact(_session, req);
+        return result.getArtifact();
    }
 
    protected final MavenRepositorySystemSession _session;
