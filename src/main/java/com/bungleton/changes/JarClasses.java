@@ -3,12 +3,10 @@ package com.bungleton.changes;
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
-import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 
 public class JarClasses
 {
@@ -33,12 +31,10 @@ public class JarClasses
     }
 
     /**
-     * Returns the set of classes in other that are missing from jar's classes.
+     * Returns the set of classes in this jar that aren't in other.
      */
-    public Set<String> findMissingClasses (JarClasses other)
+    public Iterable<String> findMissingClasses (JarClasses other)
     {
-        Set<String> missing = Sets.newHashSet(classes.keySet());
-        missing.removeAll(other.classes.keySet());
-        return missing;
+        return ChangesClass.findMissing(classes.keySet(), other.classes.keySet());
     }
 }

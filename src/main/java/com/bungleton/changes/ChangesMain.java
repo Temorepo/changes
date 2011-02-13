@@ -1,6 +1,11 @@
 package com.bungleton.changes;
 
+import java.util.List;
+import java.util.Set;
+
 import org.sonatype.aether.artifact.Artifact;
+
+import com.google.common.collect.Sets;
 
 public class ChangesMain
 {
@@ -19,5 +24,15 @@ public class ChangesMain
         System.out.println("Added in new: " + newClasses.findMissingClasses(oldClasses));
         System.out.println("Removed in new: " + oldClasses.findMissingClasses(newClasses));
 
+        Set<String> intersection = Sets.newHashSet(newClasses.classes.keySet());
+        intersection.retainAll(oldClasses.classes.keySet());
+        for (String className : intersection) {
+            List<String> differences =
+                oldClasses.classes.get(className).findDifferences(newClasses.classes.get(className));
+            for (String difference : differences) {
+                System.out.println(className + " " + difference);
+            }
+
+        }
     }
 }
