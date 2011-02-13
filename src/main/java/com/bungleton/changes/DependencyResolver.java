@@ -28,9 +28,10 @@ import org.sonatype.aether.util.artifact.DefaultArtifact;
 
 import com.google.common.collect.Lists;
 
-public class DependencyResolver {
+public class DependencyResolver
+{
 
-    public DependencyResolver()
+    public DependencyResolver ()
     {
         try {
             _system = new DefaultPlexusContainer().lookup(RepositorySystem.class);
@@ -51,15 +52,15 @@ public class DependencyResolver {
         throws RepositoryException
     {
         CollectRequest req = new CollectRequest().
-        	setRoot(new Dependency(new DefaultArtifact(artifactCoordinates), "compile")).
-        	addRepository(_repo);
+            setRoot(new Dependency(new DefaultArtifact(artifactCoordinates), "compile")).
+            addRepository(_repo);
         List<ArtifactResult> results = _system.resolveDependencies(_session, req, null);
         List<Artifact> artifacts = Lists.newArrayListWithCapacity(results.size());
         for (ArtifactResult result : results) {
             artifacts.add(result.getArtifact());
         }
         return artifacts;
-   }
+    }
 
     public Artifact resolveArtifact (String artifactCoordinates)
         throws RepositoryException
@@ -69,9 +70,9 @@ public class DependencyResolver {
             addRepository(_repo);
         ArtifactResult result = _system.resolveArtifact(_session, req);
         return result.getArtifact();
-   }
+    }
 
-   protected final MavenRepositorySystemSession _session;
-   protected final RepositorySystem _system;
-   protected final RemoteRepository _repo;
+    protected final MavenRepositorySystemSession _session;
+    protected final RepositorySystem _system;
+    protected final RemoteRepository _repo;
 }
