@@ -1,32 +1,29 @@
 package com.bungleton.changes;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemSession;
-
 import org.codehaus.plexus.DefaultPlexusContainer;
 import org.codehaus.plexus.PlexusContainerException;
-
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-
 import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.RepositorySystem;
-
 import org.sonatype.aether.artifact.Artifact;
-
 import org.sonatype.aether.collection.CollectRequest;
-
+import org.sonatype.aether.collection.DependencyCollectionException;
 import org.sonatype.aether.graph.Dependency;
-
+import org.sonatype.aether.graph.DependencyNode;
 import org.sonatype.aether.repository.LocalRepository;
 import org.sonatype.aether.repository.RemoteRepository;
-
 import org.sonatype.aether.resolution.ArtifactRequest;
 import org.sonatype.aether.resolution.ArtifactResult;
-
 import org.sonatype.aether.util.artifact.DefaultArtifact;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class DependencyResolver
 {
@@ -48,18 +45,76 @@ public class DependencyResolver
         _repo = new RemoteRepository("central", "default", "http://repo1.maven.org/maven2/");
     }
 
+    public List<VersionConflict> findVersionConflicts (String artifactCoordinates)
+        throws RepositoryException
+    {
+        CollectRequest req = createCollectRequest(artifactCoordinates);
+        DependencyNode root = _system.collectDependencies(_session, req).getRoot();
+        final Map<String, Artifact> resolved = Maps.newHashMap();
+        for (DependencyNode child : root.getChildren()) {
+            Artifact artifact = child.getDependency().getArtifact();
+            resolved.put(makeUnversionedId(artifact), artifact);
+        }
+        List<VersionConflict> found = Lists.newArrayList();
+        Set<Artifact> checked = Sets.newHashSet();
+        for (DependencyNode child : root.getChildren()) {
+            findVersionConflicts(resolved, child, found, checked);
+        }
+        return found;
+    }
+
+    /**
+     * Recursively checks for differences between the versions in dependencies of child and those
+     * found in resolved. We collecte dependencies at each level of child check as parent
+     * collectDependencies don't build the entire tree.
+     */
+    protected void findVersionConflicts (Map<String, Artifact> resolved, DependencyNode child,
+        List<VersionConflict> conflicts, Set<Artifact> checked)
+        throws DependencyCollectionException
+    {
+        Artifact checking = child.getDependency().getArtifact();
+        if (!checked.add(checking)) {
+            return;
+        }
+        CollectRequest req = createCollectRequest(checking);
+        DependencyNode childRoot = _system.collectDependencies(_session, req).getRoot();
+        for (DependencyNode grandchild : childRoot.getChildren()) {
+            Artifact expected = grandchild.getDependency().getArtifact();
+            Artifact found = resolved.get(makeUnversionedId(expected));
+            if (!found.equals(expected)) {
+                conflicts.add(new VersionConflict(checking, expected, found));
+            }
+            findVersionConflicts(resolved, grandchild, conflicts, checked);
+        }
+    }
+
+    protected static String makeUnversionedId (Artifact artifact)
+    {
+        return artifact.getGroupId() + ":" + artifact.getArtifactId();
+    }
+
     public Iterable<Artifact> resolveDependencies (String artifactCoordinates)
         throws RepositoryException
     {
-        CollectRequest req = new CollectRequest().
-            setRoot(new Dependency(new DefaultArtifact(artifactCoordinates), "compile")).
-            addRepository(_repo);
+        CollectRequest req = createCollectRequest(artifactCoordinates);
         List<ArtifactResult> results = _system.resolveDependencies(_session, req, null);
         List<Artifact> artifacts = Lists.newArrayListWithCapacity(results.size());
         for (ArtifactResult result : results) {
             artifacts.add(result.getArtifact());
         }
         return artifacts;
+    }
+
+    protected CollectRequest createCollectRequest (String artifactCoordinates)
+    {
+        return createCollectRequest(new DefaultArtifact(artifactCoordinates));
+    }
+
+    protected CollectRequest createCollectRequest (Artifact artifact)
+    {
+        return new CollectRequest().
+            setRoot(new Dependency(artifact, "compile")).
+            addRepository(_repo);
     }
 
     public Artifact resolveArtifact (String artifactCoordinates)

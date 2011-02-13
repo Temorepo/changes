@@ -13,6 +13,7 @@ public class ChangesMain
     public static void main (String[] args)
         throws Exception
     {
+        System.out.println(new DependencyResolver().findVersionConflicts("com.bungleton.changestest:testapp:1"));
         for (ClassDifference difference : diffArtifacts("com.samskivert:samskivert", "1.1", "1.2")) {
             System.out.println(difference);
         }
