@@ -25,9 +25,6 @@ import org.sonatype.aether.resolution.ArtifactResult;
 
 import org.sonatype.aether.util.artifact.DefaultArtifact;
 
-import com.google.common.base.Function;
-
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 public class DependencyResolver {
@@ -46,7 +43,7 @@ public class DependencyResolver {
         LocalRepository localRepo =
             new LocalRepository(System.getProperty("user.home") + "/.m2/repository");
         _session.setLocalRepositoryManager(_system.newLocalRepositoryManager(localRepo));
-        _repos.add(new RemoteRepository("central", "default", "http://repo1.maven.org/maven2/"));
+        _repo = new RemoteRepository("central", "default", "http://repo1.maven.org/maven2/");
     }
 
     public Iterable<Artifact> resolve (String artifactCoordinates)
@@ -54,23 +51,16 @@ public class DependencyResolver {
     {
         Dependency root = new Dependency(new DefaultArtifact(artifactCoordinates), "compile");
 
-        CollectRequest req = new CollectRequest().setRoot(root);
-        for (RemoteRepository repo : _repos) {
-            req.addRepository(repo);
+        CollectRequest req = new CollectRequest().setRoot(root).addRepository(_repo);
+        List<ArtifactResult> results = _system.resolveDependencies(_session, req, null);
+        List<Artifact> artifacts = Lists.newArrayListWithCapacity(results.size());
+        for (ArtifactResult result : results) {
+            artifacts.add(result.getArtifact());
         }
-        return Iterables.transform(_system.resolveDependencies(_session, req, null),
-            ARTIFACT_RESULT_TO_ARTIFACT);
+        return artifacts;
    }
-
-
-   protected static final Function<ArtifactResult, Artifact> ARTIFACT_RESULT_TO_ARTIFACT =
-       new Function<ArtifactResult, Artifact>() {
-           @Override public Artifact apply(ArtifactResult result) {
-               return result.getArtifact();
-           }
-       };
 
    protected final MavenRepositorySystemSession _session;
    protected final RepositorySystem _system;
-   protected final List<RemoteRepository> _repos = Lists.newArrayList();
+   protected final RemoteRepository _repo;
 }
