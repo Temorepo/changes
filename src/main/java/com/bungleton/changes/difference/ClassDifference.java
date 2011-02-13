@@ -1,11 +1,14 @@
 package com.bungleton.changes.difference;
 
+import com.google.common.base.Preconditions;
+
 public class ClassDifference
 {
     public final String className;
 
     public ClassDifference (String className)
     {
+        Preconditions.checkNotNull(className, "className must not be null");
         this.className = className;
     }
 

@@ -1,5 +1,7 @@
 package com.bungleton.changes.difference;
 
+import com.google.common.base.Preconditions;
+
 public class MethodDifference extends ClassDifference
 {
     public final String signature;
@@ -7,6 +9,7 @@ public class MethodDifference extends ClassDifference
     public MethodDifference (String className, String signature)
     {
         super(className);
+        Preconditions.checkNotNull(signature, "signature must not be null");
         this.signature = signature;
     }
 
