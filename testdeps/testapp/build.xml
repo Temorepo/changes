@@ -1,34 +1,5 @@
 <project name="testapp">
-  <property name="src.dir" location="src/main/java"/>
-  <property name="deploy.dir" location="dist"/>
-  <property name="classes.dir" location="${deploy.dir}/classes"/>
-  <property name="jar.file" location="${deploy.dir}/${ant.project.name}.jar"/>
-
-  <!-- bring in our standard build support -->
-  <property name="ooo-build.vers" value="1.25"/>
-  <ant antfile="../../bootstrap.xml"/>
-  <import file="${user.home}/.m2/ant-support/${ooo-build.vers}/build-support.xml"/>
-
-  <target name="prepare" depends="-init-maven-ant,-init-contrib">
-    <mkdir dir="${classes.dir}"/>
-    <mavendep pom="pom.xml"/>
-  </target>
-
-  <target name="clean" description="Cleans out build results.">
-    <delete dir="${classes.dir}"/>
-  </target>
-
-  <target name="distclean" description="Completely removes build result directory.">
-    <delete dir="${deploy.dir}"/>
-  </target>
-
-  <target name="compile" depends="prepare" description="Compiles the code.">
-    <ooojavac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="pom.xml.path"/>
-  </target>
-
-  <target name="dist" depends="compile" description="Compiles code, builds jar file.">
-    <jar destfile="${jar.file}" basedir="${classes.dir}"/>
-  </target>
+  <import file="../test-build-base.xml"/>
 
   <target name="run" depends="compile">
     <path id="build.classpath">
@@ -36,9 +7,5 @@
       <pathelement location="${classes.dir}"/>
     </path>
     <java classname="com.bungleton.changestest.app.AppMain" classpathref="build.classpath"/>
-  </target>
-
-  <target name="maven-deploy" depends="dist" description="Deploys artifacts to a Maven repository.">
-    <mavendeploy pom="pom.xml" file="${jar.file}" srcdir="${src.dir}"/>
   </target>
 </project>
