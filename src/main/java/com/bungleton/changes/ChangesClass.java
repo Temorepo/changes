@@ -10,6 +10,9 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import com.bungleton.changes.difference.ClassDifference;
+import com.bungleton.changes.difference.MethodAdded;
+import com.bungleton.changes.difference.MethodRemoved;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -32,21 +35,18 @@ public class ChangesClass
         return "ChangesClass[" + getName() + "]";
     }
 
-    public List<String> findDifferences (ChangesClass other)
+    public List<ClassDifference> findDifferences (ChangesClass other)
     {
-        List<String> differences = Lists.newArrayList();
+        List<ClassDifference> differences = Lists.newArrayList();
         ClassNode onode = other._node;
-        if (_node.access != onode.access) {
-            differences.add("Class accessibility");
-        }
 
         Set<String> ourMethodSignatures = makeMethodSet(_node);
         Set<String> otherMethodSignatures = makeMethodSet(onode);
         for (String sig : findMissing(ourMethodSignatures, otherMethodSignatures)) {
-            differences.add("Removed " + sig);
+            differences.add(new MethodRemoved(getName(), sig));
         }
         for (String sig : findMissing(otherMethodSignatures, ourMethodSignatures)) {
-            differences.add("Added " + sig);
+            differences.add(new MethodAdded(getName(), sig));
         }
         return differences;
     }

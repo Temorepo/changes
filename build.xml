@@ -1,17 +1,26 @@
 <project name="changes">
   <property name="src.dir" location="src/main/java"/>
+  <property name="tsrc.dir" location="src/test/java"/>
   <property name="deploy.dir" location="dist"/>
   <property name="classes.dir" location="${deploy.dir}/classes"/>
+  <property name="tclasses.dir" location="${deploy.dir}/test-classes"/>
   <property name="jar.file" location="${deploy.dir}/${ant.project.name}.jar"/>
 
   <!-- bring in our standard build support -->
-  <property name="ooo-build.vers" value="1.24"/>
+  <property name="ooo-build.vers" value="1.25"/>
   <ant antfile="bootstrap.xml"/>
   <import file="${user.home}/.m2/ant-support/${ooo-build.vers}/build-support.xml"/>
 
   <target name="prepare" depends="-init-maven-ant,-init-contrib">
     <mkdir dir="${classes.dir}"/>
+    <mkdir dir="${tclasses.dir}"/>
     <mavendep pom="pom.xml"/>
+    <mavendep pom="pom.xml" id="test.pom.xml" scope="test"/>
+    <path id="test.classpath">
+      <path refid="test.pom.xml.path"/>
+      <pathelement location="${classes.dir}"/>
+      <pathelement location="${tclasses.dir}"/>
+    </path>
   </target>
 
   <target name="clean" description="Cleans out build results.">
@@ -24,10 +33,28 @@
 
   <target name="compile" depends="prepare" description="Compiles the code.">
     <ooojavac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="pom.xml.path"/>
+    <ooojavac srcdir="${tsrc.dir}" destdir="${tclasses.dir}" classpathref="test.classpath"/>
   </target>
 
   <target name="dist" depends="compile" description="Compiles code, builds jar file.">
     <jar destfile="${jar.file}" basedir="${classes.dir}"/>
+  </target>
+
+  <property name="test" value=""/>
+  <target name="tests" depends="compile"
+          description="Runs unit tests. Use -Dtest=Foo to run only FooTest.">
+    <taskdef name="unit" classpathref="test.classpath"
+      classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask"/>
+    <mkdir dir="${deploy.dir}/test-reports"/>
+    <unit printsummary="off" haltonfailure="yes">
+      <classpath refid="test.classpath"/>
+      <sysproperty key="test_dir" value="${tclasses.dir}"/>
+      <formatter type="brief" usefile="false"/>
+      <formatter type="xml"/>
+      <batchtest todir="${deploy.dir}/test-reports">
+        <fileset dir="${tsrc.dir}" includes="**/*${test}*Test.java"/>
+      </batchtest>
+    </unit>
   </target>
 
   <target name="maven-deploy" depends="dist" description="Deploys artifacts to a Maven repository.">
