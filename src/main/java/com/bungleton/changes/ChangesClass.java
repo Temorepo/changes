@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -22,7 +23,7 @@ public class ChangesClass
 
     public String getName()
     {
-        return _node.name;
+        return _node.name.replace('/', '.');
     }
 
     @Override
@@ -59,13 +60,23 @@ public class ChangesClass
 
     protected static Set<String> makeMethodSet (ClassNode node)
     {
-        Set<String> otherMethodSignatures = Sets.newHashSet();
+        Set<String> sigs= Sets.newHashSet();
         @SuppressWarnings("unchecked")
         List<MethodNode> meths = node.methods;
         for (MethodNode meth : meths) {
-            otherMethodSignatures.add(meth.name + " " + meth.signature);
+            StringBuilder builder = new StringBuilder(Type.getReturnType(meth.desc).getClassName());
+            builder.append(' ').append(meth.name).append('(');
+            Type[] args = Type.getArgumentTypes(meth.desc);
+            for (int ii = 0; ii < args.length; ii++) {
+                builder.append(args[ii].getClassName());
+                if (ii < args.length - 1){
+                    builder.append(", ");
+                }
+            }
+            builder.append(')');
+            sigs.add(builder.toString());
         }
-        return otherMethodSignatures;
+        return sigs;
     }
 
     protected final ClassNode _node;
