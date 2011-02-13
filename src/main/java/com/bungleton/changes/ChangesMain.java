@@ -21,8 +21,8 @@ public class ChangesMain
         Artifact newJar = resolver.resolveArtifact("com.samskivert:samskivert:1.2");
         JarClasses newClasses = new JarClasses(newJar.getFile());
 
-        System.out.println("Added in new: " + newClasses.findMissingClasses(oldClasses));
-        System.out.println("Removed in new: " + oldClasses.findMissingClasses(newClasses));
+        System.out.println("Added: " + newClasses.findMissingClasses(oldClasses));
+        System.out.println("Removed: " + oldClasses.findMissingClasses(newClasses));
 
         Set<String> intersection = Sets.newHashSet(newClasses.classes.keySet());
         intersection.retainAll(oldClasses.classes.keySet());
