@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.sonatype.aether.RepositoryException;
-
+import org.sonatype.aether.resolution.ArtifactResolutionException;
 import com.bungleton.changes.difference.ClassDifference;
 import com.bungleton.yarrgs.Positional;
 import com.bungleton.yarrgs.Usage;
@@ -42,8 +42,13 @@ public class ChangesMain
                 + conflict.expected.getBaseVersion() + " for " + conflict.expected.getGroupId() + ":"
                 + conflict.expected.getArtifactId() + " but got "
                 + conflict.resolved.getBaseVersion());
-            List<ClassDifference> differences =
-                resolver.diffArtifacts(conflict.expected, conflict.resolved);
+            List<ClassDifference> differences;
+            try {
+                differences = resolver.diffArtifacts(conflict.expected, conflict.resolved);
+            } catch (ArtifactResolutionException anfe) {
+                System.err.println("Unable to rsolve artifacts to diff: " + anfe.getMessage());
+                continue;
+            }
             System.out.println("Changes in " + conflict.resolved.getBaseVersion() + " from " + conflict.expected.getBaseVersion() + ":");
             for (ClassDifference diff : differences) {
                 System.out.println("  " + diff);
