@@ -10,12 +10,15 @@ import com.bungleton.changes.difference.ClassDifference;
 import com.bungleton.yarrgs.Positional;
 import com.bungleton.yarrgs.Usage;
 import com.bungleton.yarrgs.Yarrgs;
+import com.google.common.collect.Lists;
 
 public class ChangesMain
 {
     @Usage("Pom file to check for version conflicts and changes. Defaults to 'pom.xml' in the current directory.")
     @Positional(optional=true)
     public File pom;
+
+    public List<String> repository = Lists.newArrayList();
 
     public void run ()
         throws RepositoryException, IOException
@@ -29,6 +32,9 @@ public class ChangesMain
         }
         LocalPomReader pomReader = new LocalPomReader(pom);
         DependencyResolver resolver = new DependencyResolver().addWorkspaceReader(pomReader);
+        for (String repo : repository) {
+            resolver.addRemoteRepository(repo);
+        }
         List<VersionConflict> conflicts =
             resolver.findVersionConflicts(pomReader.getArtifactCoordinates());
         for (VersionConflict conflict : conflicts) {

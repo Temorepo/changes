@@ -46,7 +46,12 @@ public class DependencyResolver
         LocalRepository localRepo =
             new LocalRepository(System.getProperty("user.home") + "/.m2/repository");
         _session.setLocalRepositoryManager(_system.newLocalRepositoryManager(localRepo));
-        _repo = new RemoteRepository("central", "default", "http://repo1.maven.org/maven2/");
+        _repos.add(new RemoteRepository("central", "default", "http://repo1.maven.org/maven2/"));
+    }
+
+    public void addRemoteRepository (String repo)
+    {
+        _repos.add(new RemoteRepository(repo, "default", repo));
     }
 
     public DependencyResolver addWorkspaceReader (WorkspaceReader reader)
@@ -147,7 +152,7 @@ public class DependencyResolver
     {
         return new CollectRequest().
             setRoot(new Dependency(artifact, "compile")).
-            addRepository(_repo);
+            setRepositories(_repos);
     }
 
     public Artifact resolveArtifact (String artifactCoordinates)
@@ -164,7 +169,7 @@ public class DependencyResolver
         }
         ArtifactRequest req = new ArtifactRequest().
             setArtifact(unresolved).
-            addRepository(_repo);
+            setRepositories(_repos);
         ArtifactResult result = _system.resolveArtifact(_session, req);
         return result.getArtifact();
     }
@@ -172,5 +177,5 @@ public class DependencyResolver
     protected WorkspaceReader _reader;
     protected final MavenRepositorySystemSession _session;
     protected final RepositorySystem _system;
-    protected final RemoteRepository _repo;
+    protected final List<RemoteRepository> _repos = Lists.newArrayList();
 }
