@@ -1,5 +1,6 @@
 package com.bungleton.changes;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,9 +19,11 @@ import org.sonatype.aether.graph.DependencyNode;
 import org.sonatype.aether.repository.LocalRepository;
 import org.sonatype.aether.repository.RemoteRepository;
 import org.sonatype.aether.resolution.ArtifactRequest;
+import org.sonatype.aether.resolution.ArtifactResolutionException;
 import org.sonatype.aether.resolution.ArtifactResult;
 import org.sonatype.aether.util.artifact.DefaultArtifact;
 
+import com.bungleton.changes.difference.ClassDifference;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -45,6 +48,24 @@ public class DependencyResolver
         _repo = new RemoteRepository("central", "default", "http://repo1.maven.org/maven2/");
     }
 
+    public List<ClassDifference> diffArtifacts (String groupAndArtifact, String oldVersion,
+        String newVersion) throws RepositoryException, IOException
+    {
+        return diffArtifacts(resolveArtifact(groupAndArtifact + ":" + oldVersion),
+            resolveArtifact(groupAndArtifact + ":" + newVersion));
+    }
+
+    public List<ClassDifference> diffArtifacts (Artifact expected, Artifact resolved)
+        throws IOException, ArtifactResolutionException
+    {
+        expected = resolveArtifact(expected);
+        resolved = resolveArtifact(resolved);
+        JarClasses oldClasses = new JarClasses(expected.getFile());
+        JarClasses newClasses = new JarClasses(resolved.getFile());
+        return oldClasses.findDifferences(newClasses);
+
+    }
+
     public List<VersionConflict> findVersionConflicts (String artifactCoordinates)
         throws RepositoryException
     {
@@ -65,7 +86,7 @@ public class DependencyResolver
 
     /**
      * Recursively checks for differences between the versions in dependencies of child and those
-     * found in resolved. We collecte dependencies at each level of child check as parent
+     * found in resolved. We collect dependencies at each level of child check as parent
      * collectDependencies don't build the entire tree.
      */
     protected void findVersionConflicts (Map<String, Artifact> resolved, DependencyNode child,
@@ -81,7 +102,7 @@ public class DependencyResolver
         for (DependencyNode grandchild : childRoot.getChildren()) {
             Artifact expected = grandchild.getDependency().getArtifact();
             Artifact found = resolved.get(makeUnversionedId(expected));
-            if (!found.equals(expected)) {
+            if (found != null && !found.equals(expected)) {
                 conflicts.add(new VersionConflict(checking, expected, found));
             }
             findVersionConflicts(resolved, grandchild, conflicts, checked);
@@ -120,8 +141,17 @@ public class DependencyResolver
     public Artifact resolveArtifact (String artifactCoordinates)
         throws RepositoryException
     {
+        return resolveArtifact(new DefaultArtifact(artifactCoordinates));
+    }
+
+    public Artifact resolveArtifact (Artifact unresolved)
+        throws ArtifactResolutionException
+    {
+        if (unresolved.getFile() != null) {
+            return unresolved;
+        }
         ArtifactRequest req = new ArtifactRequest().
-            setArtifact(new DefaultArtifact(artifactCoordinates)).
+            setArtifact(unresolved).
             addRepository(_repo);
         ArtifactResult result = _system.resolveArtifact(_session, req);
         return result.getArtifact();

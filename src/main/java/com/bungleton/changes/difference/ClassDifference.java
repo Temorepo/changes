@@ -15,7 +15,7 @@ public class ClassDifference
     @Override
     public String toString ()
     {
-        return getClass().getSimpleName() + "[" + className + "]";
+        return getClass().getSimpleName() + " [" + className + "]";
     }
 
     @Override

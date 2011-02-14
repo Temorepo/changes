@@ -16,7 +16,7 @@ public class MethodDifference extends ClassDifference
     @Override
     public String toString ()
     {
-        return getClass().getSimpleName() + "[" + className + " " + signature + "]";
+        return getClass().getSimpleName() + " [" + className + " " + signature + "]";
     }
 
     @Override

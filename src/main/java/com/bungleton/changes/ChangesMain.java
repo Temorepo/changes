@@ -1,10 +1,6 @@
 package com.bungleton.changes;
 
-import java.io.IOException;
 import java.util.List;
-
-import org.sonatype.aether.RepositoryException;
-import org.sonatype.aether.artifact.Artifact;
 
 import com.bungleton.changes.difference.ClassDifference;
 
@@ -13,23 +9,20 @@ public class ChangesMain
     public static void main (String[] args)
         throws Exception
     {
-        System.out.println(new DependencyResolver().findVersionConflicts("com.bungleton.changestest:testapp:1"));
-        for (ClassDifference difference : diffArtifacts("com.samskivert:samskivert", "1.1", "1.2")) {
-            System.out.println(difference);
-        }
-    }
-
-    public static List<ClassDifference> diffArtifacts (String groupAndArtifact,
-        String oldVersion, String newVersion)
-        throws RepositoryException, IOException
-    {
         DependencyResolver resolver = new DependencyResolver();
-        Artifact oldJar = resolver.resolveArtifact(groupAndArtifact + ":" + oldVersion);
-        JarClasses oldClasses = new JarClasses(oldJar.getFile());
-
-        Artifact newJar = resolver.resolveArtifact(groupAndArtifact + ":" + newVersion);
-        JarClasses newClasses = new JarClasses(newJar.getFile());
-
-        return oldClasses.findDifferences(newClasses);
+        List<VersionConflict> conflicts =
+            resolver.findVersionConflicts("com.bungleton.changestest:testapp:1");
+        for (VersionConflict conflict : conflicts) {
+            System.out.println(conflict.parent + " expected version "
+                + conflict.expected.getBaseVersion() + " for " + conflict.expected.getGroupId() + ":"
+                + conflict.expected.getArtifactId() + " but got "
+                + conflict.resolved.getBaseVersion());
+            List<ClassDifference> differences =
+                resolver.diffArtifacts(conflict.expected, conflict.resolved);
+            System.out.println("Changes in " + conflict.resolved.getBaseVersion() + " from " + conflict.expected.getBaseVersion() + ":");
+            for (ClassDifference diff : differences) {
+                System.out.println("  " + diff);
+            }
+        }
     }
 }

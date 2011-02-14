@@ -22,7 +22,4 @@ public class DependencyResolverTest
         Artifact resolved = new DefaultArtifact("com.bungleton.changestest:testlib:jar:2");
         assertEquals(conflicts.get(0), new VersionConflict(parent, expected, resolved));
     }
-
-
-
 }

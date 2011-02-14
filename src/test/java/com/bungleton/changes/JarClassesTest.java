@@ -21,7 +21,7 @@ public class JarClassesTest
     public void checkBasicDiff () throws RepositoryException, IOException
     {
         List<ClassDifference> diffs =
-            ChangesMain.diffArtifacts("com.bungleton.changestest:testlib", "1", "2");
+            new DependencyResolver().diffArtifacts("com.bungleton.changestest:testlib", "1", "2");
         assertEquals(3, diffs.size());
         assertTrue(diffs.contains(new ClassAdded("com.bungleton.changestest.lib.ThatThingAddedInV2")));
         assertTrue(diffs.contains(new ClassRemoved("com.bungleton.changestest.lib.ThatOtherThing")));
