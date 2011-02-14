@@ -73,6 +73,13 @@
     	<type>jar</type>
     	<scope>test</scope>
     </dependency>
+    <dependency>
+    	<groupId>com.bungleton</groupId>
+    	<artifactId>yarrgs</artifactId>
+    	<version>0.1-SNAPSHOT</version>
+    	<type>jar</type>
+    	<scope>compile</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

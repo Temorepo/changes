@@ -18,10 +18,12 @@ import org.sonatype.aether.graph.Dependency;
 import org.sonatype.aether.graph.DependencyNode;
 import org.sonatype.aether.repository.LocalRepository;
 import org.sonatype.aether.repository.RemoteRepository;
+import org.sonatype.aether.repository.WorkspaceReader;
 import org.sonatype.aether.resolution.ArtifactRequest;
 import org.sonatype.aether.resolution.ArtifactResolutionException;
 import org.sonatype.aether.resolution.ArtifactResult;
 import org.sonatype.aether.util.artifact.DefaultArtifact;
+import org.sonatype.aether.util.repository.ChainedWorkspaceReader;
 
 import com.bungleton.changes.difference.ClassDifference;
 import com.google.common.collect.Lists;
@@ -40,12 +42,22 @@ public class DependencyResolver
         } catch (PlexusContainerException pce) {
             throw new RuntimeException(pce);
         }
-
         _session = new MavenRepositorySystemSession();
         LocalRepository localRepo =
             new LocalRepository(System.getProperty("user.home") + "/.m2/repository");
         _session.setLocalRepositoryManager(_system.newLocalRepositoryManager(localRepo));
         _repo = new RemoteRepository("central", "default", "http://repo1.maven.org/maven2/");
+    }
+
+    public DependencyResolver addWorkspaceReader (WorkspaceReader reader)
+    {
+        if (_reader == null) {
+            _reader = reader;
+        } else {
+            _reader = ChainedWorkspaceReader.newInstance(reader, _reader);
+        }
+        _session.setWorkspaceReader(_reader);
+        return this;
     }
 
     public List<ClassDifference> diffArtifacts (String groupAndArtifact, String oldVersion,
@@ -157,6 +169,7 @@ public class DependencyResolver
         return result.getArtifact();
     }
 
+    protected WorkspaceReader _reader;
     protected final MavenRepositorySystemSession _session;
     protected final RepositorySystem _system;
     protected final RemoteRepository _repo;
