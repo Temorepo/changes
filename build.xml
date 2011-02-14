@@ -5,6 +5,7 @@
   <property name="classes.dir" location="${deploy.dir}/classes"/>
   <property name="tclasses.dir" location="${deploy.dir}/test-classes"/>
   <property name="jar.file" location="${deploy.dir}/${ant.project.name}.jar"/>
+  <property name="appjar.file" location="${deploy.dir}/${ant.project.name}-app.jar"/>
 
   <!-- bring in our standard build support -->
   <property name="ooo-build.vers" value="1.25"/>
@@ -55,6 +56,22 @@
         <fileset dir="${tsrc.dir}" includes="**/*${test}*Test.java"/>
       </batchtest>
     </unit>
+  </target>
+
+  <!-- Tries to make a sumo jar, but the thing fails to launch, probably due to some plexus
+    configuration being in the same spot in several of the component jars -->
+  <target name="-app" depends="dist">
+    <copy file="${jar.file}" tofile="${appjar.file}" overwrite="true"/>
+    <jar destfile="${appjar.file}" update="true">
+      <archives>
+        <zips>
+          <path refid="pom.xml.path"/>
+        </zips>
+      </archives>
+      <manifest>
+        <attribute name="Main-Class" value="com.bungleton.changes.ChangesMain"/>
+      </manifest>
+    </jar>
   </target>
 
   <target name="maven-deploy" depends="dist" description="Deploys artifacts to a Maven repository.">
